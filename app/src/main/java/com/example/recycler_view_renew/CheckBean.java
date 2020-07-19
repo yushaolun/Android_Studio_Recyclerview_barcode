@@ -5,7 +5,7 @@ import java.io.Serializable;
 public class CheckBean implements Serializable {
     boolean isChecked;
     String name;
-    int amount;
+    int amount=0;
 
 
     public String getname() {
@@ -32,8 +32,8 @@ public class CheckBean implements Serializable {
         this.isChecked = checked;
     }
 
-    public void amount() {
-        this.amount=amount;
+    public void setamount(int x) {
+        this.amount=x;
     }
 
 

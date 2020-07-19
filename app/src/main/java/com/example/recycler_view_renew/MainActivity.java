@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.sqlite.SQLiteDatabase;
@@ -30,15 +31,26 @@ public class MainActivity extends AppCompatActivity {
     CheckBox ch_all;
     CheckBox ch1;
     EditText ed1;
+    AlertDialog dialog;
+
     String name="";
+    int x = 0;
+    String table;
+    SQLiteDatabase db;
+    MyDB helper=new MyDB(this);
 
 
+    boolean repeat=false;
 
     CheckBean checkBean=new CheckBean();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        table=helper.table_name; //資料表
+        db=helper.getReadableDatabase(); //讀取資料庫
 
         recyclerView = (RecyclerView) findViewById(R.id.recycle);
         recyclerView.setHasFixedSize(true);
@@ -73,13 +85,34 @@ public class MainActivity extends AppCompatActivity {
         }
 
     public void addata(String name) {
+     
+
 
         CheckBean checkBean = new CheckBean();
         checkBean.setname(name);
         checkBean.setChecked(false);
 
+        for (int i=0;i<data.size();i++) {
+            if (checkBean.getname().equals(data.get(i).getname())) {
+                repeat = true;
+                x = data.get(i).getamount() + 1;
+                checkBean.setamount(x);
+                data.set(i, checkBean);
+            }
+        }
 
-        data.add(checkBean);
+            if (!repeat){
+                data.add(checkBean);
+
+            }
+            else {
+                repeat=false;
+
+            }
+
+
+
+
         myadapter.notifyDataSetChanged();
 
     }
@@ -142,6 +175,47 @@ public class MainActivity extends AppCompatActivity {
 
             checkBean = data.get(position);
             holder.comment.setText(checkBean.getname());
+            holder.amount.setText(checkBean.getamount()+" ");
+            holder.amount.setOnClickListener(new View.OnClickListener() {    //當按下textview
+                @Override
+                public void onClick(final View view) {
+                    checkBean = data.get(position);
+                    View layout = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog, null);
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    final EditText ed3 = layout.findViewById(R.id.edi3);
+                    ed3.setText(""+checkBean.getamount());
+                    builder.setMessage("喜歡的話給個好評吧！");
+                    builder.setView(layout);   //設定layout
+
+
+                    builder.setPositiveButton("確定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                            int a = Integer.parseInt(ed3.getText().toString());
+                            checkBean = data.get(position);
+                            if (a == 0) {
+                                data.remove(position);
+                                Log.v("HI",""+position);
+                                myadapter.notifyDataSetChanged();
+
+                            } else {
+                                checkBean.setamount(a);
+                                data.set(position, checkBean);
+                                myadapter.notifyDataSetChanged();
+                            }
+
+
+                        }
+                    });
+                    dialog = builder.create();
+                    dialog.show();
+
+
+
+
+                }
+            });
 
 
             holder.che.setChecked(checkBean.ischeck());
@@ -177,11 +251,11 @@ public class MainActivity extends AppCompatActivity {
 
             public MyViewHolder(View view) {
                 super(view);
+
                 itemview = view;
                 comment = itemview.findViewById(R.id.tex1);
                 amount=itemview.findViewById(R.id.tex2);
                 che = itemview.findViewById(R.id.checkBox);
-
 
             }
 
